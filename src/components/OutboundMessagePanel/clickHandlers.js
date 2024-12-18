@@ -7,19 +7,16 @@ export const onSendClickHandler = (
   menuItemClicked,
   toNumber,
   messageType,
-  messageBody,
-  contentTemplateSid
+  messageBody
 ) => {
+  // default is open a chat task which would have had the message added
   let payload = {
-    destination:
-      messageType === "whatsapp" ? "whatsapp:" + toNumber : toNumber,
+    destination: messageType === "whatsapp" ? "whatsapp:" + toNumber : toNumber,
     callerId:
       messageType === "whatsapp"
         ? "whatsapp:" + process.env.FLEX_APP_TWILIO_WHATSAPP_FROM_NUMBER
         : process.env.FLEX_APP_TWILIO_FROM_NUMBER,
     body: messageBody,
-    ContentTemplateSid: contentTemplateSid, // Add contentTemplateSid to the payload
-    messageType: messageType,
     openChat: true,
     routeToMe: true,
   };
@@ -30,11 +27,10 @@ export const onSendClickHandler = (
       payload.openChat = false;
       payload.routeToMe = true;
       break;
+
     case "SEND_MESSAGE":
       payload.openChat = false;
       payload.routeToMe = false;
-      break;
-    default:
       break;
   }
 

@@ -50,7 +50,6 @@ exports.handler = TokenValidator(async function (context, event, callback) {
   const {
     To,
     From,
-    ContentTemplateSid,
     Body,
     Template,
     WorkspaceSid,
@@ -85,7 +84,7 @@ exports.handler = TokenValidator(async function (context, event, callback) {
 
     // Handle existing conversation in progress
     if (existingConversationDetails) {
-      if (!existingConversationDetails.taskExists) {
+      if (!OpenChatFlag && !existingConversationDetails.taskExists) {
         // For the scenario where:
         // "We are waiting until the customer replies before creating a task &&
         // there is an existing conversation &&
@@ -144,7 +143,6 @@ exports.handler = TokenValidator(async function (context, event, callback) {
         From,
         Body,
         template,
-        ContentTemplateSid,
         WorkerFriendlyName,
         {
           workspace_sid: WorkspaceSid,
