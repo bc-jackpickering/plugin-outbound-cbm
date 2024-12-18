@@ -5,11 +5,12 @@ exports.createOutboundFlexConversation = async (
   To,
   From,
   Body,
+  Template,
   WorkerFriendlyName,
   routingProperties
 ) => {
   const channelType = To.startsWith("whatsapp") ? "whatsapp" : "sms";
-  console.log(To, From, Body, WorkerFriendlyName, routingProperties);
+  console.log(To, From, Body, WorkerFriendlyName, routingProperties, Template);
 
   // Note that we are passing in an existing conversation sid.
   // In some use cases for outbound agent initiated conversations (and in many of the Twilio docs)
@@ -43,9 +44,25 @@ exports.createOutboundFlexConversation = async (
   const taskAttributes = JSON.parse(interaction.routing.properties.attributes);
   console.log(taskAttributes);
 
-  const message = await client.conversations.v1
-    .conversations(taskAttributes.conversationSid)
-    .messages.create({ author: WorkerFriendlyName, body: Body });
+  if(Template && Template?.id) {
+    console.log(Template);
+    console.log(JSON.stringify(Template.variables));
+  }
+
+  let message = null;
+  if(Template && Template?.id) {
+    message = await client.conversations.v1
+      .conversations(taskAttributes.conversationSid)
+      .messages.create({
+        contentSid: Template.id,
+        contentVariables: JSON.stringify(Template.variables),
+        author: WorkerFriendlyName,
+      });
+  } else {
+    message = await client.conversations.v1
+      .conversations(taskAttributes.conversationSid)
+      .messages.create({ author: WorkerFriendlyName, body: Body });
+  }
 
   console.log(message);
 

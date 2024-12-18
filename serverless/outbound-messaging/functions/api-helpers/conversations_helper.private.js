@@ -129,9 +129,37 @@ exports.addAgentMessageToConversation = async (
   client,
   conversation,
   WorkerFriendlyName,
-  Body
+  Body,
+  Template
 ) => {
-  const message = await client.conversations.v1
-    .conversations(conversation.sid)
-    .messages.create({ author: WorkerFriendlyName, body: Body });
+  if(Template && Template?.id) {
+    await client.conversations.v1
+      .conversations(conversation.sid)
+      .messages.create({
+        contentSid: Template.id,
+        contentVariables: JSON.stringify(Template.variables),
+        author: WorkerFriendlyName,
+      });
+  } else {
+    await client.conversations.v1
+      .conversations(conversation.sid)
+      .messages.create({ author: WorkerFriendlyName, body: Body });
+  }
+};
+
+exports.closeCurrentlyActiveConversation = async (
+  client,
+  conversationSid
+) => {
+  try {
+    // Close the active conversation by updating its state
+    await client.conversations.v1
+      .conversations(conversationSid)
+      .update({ state: 'closed' });
+
+    console.log(`Conversation ${conversationSid} has been successfully closed.`);
+  } catch (error) {
+    console.error(`Failed to close conversation ${conversationSid}:`, error);
+    throw error;
+  }
 };

@@ -3,6 +3,10 @@ const { createOutboundCustomerConversation } = require(Runtime.getFunctions()[
   "api-helpers/conversations_helper"
 ].path);
 
+const { closeCurrentlyActiveConversation } = require(Runtime.getFunctions()[
+  "api-helpers/conversations_helper"
+].path);
+
 const { sendOutboundMessageAndWaitForReply } = require(Runtime.getFunctions()[
   "outbound-helpers/sendOutboundMessageAndWaitForReply"
 ].path);
@@ -37,7 +41,7 @@ const existingOpenConversationResponse = (
   response.appendHeader("Content-Type", "application/json");
   response.setBody({
     success: false,
-    errorMessage: `Error sending message. There is an open ${direction} conversation already to ${to} ${agentName}`,
+    errorMessage: `Could not send message - There is an open ${direction} conversation already to ${to} ${agentName}.`,
   });
   return callback(null, response);
 };
@@ -47,6 +51,7 @@ exports.handler = TokenValidator(async function (context, event, callback) {
     To,
     From,
     Body,
+    Template,
     WorkspaceSid,
     WorkflowSid,
     QueueSid,
@@ -94,6 +99,9 @@ exports.handler = TokenValidator(async function (context, event, callback) {
         customerConversation = existingConversationDetails.conversation;
         reusingExistingConversation = true;
       } else {
+        // Do not close the current conversation and let the agent know that an active conversation is already open with that customer
+        // await closeCurrentlyActiveConversation(client, existingConversationDetails.conversation.sid);
+
         return existingOpenConversationResponse(
           callback,
           response,
@@ -110,11 +118,17 @@ exports.handler = TokenValidator(async function (context, event, callback) {
 
     let responseBody = {};
 
+    let template = null;
+    if(Template !== '{}') {
+      template = JSON.parse(Template);
+    }
+
     if (!OpenChatFlag) {
       responseBody = await sendOutboundMessageAndWaitForReply(
         client,
         customerConversation,
         Body,
+        template,
         KnownAgentRoutingFlag,
         WorkerFriendlyName,
         WorkerSid,
@@ -128,6 +142,7 @@ exports.handler = TokenValidator(async function (context, event, callback) {
         To,
         From,
         Body,
+        template,
         WorkerFriendlyName,
         {
           workspace_sid: WorkspaceSid,
