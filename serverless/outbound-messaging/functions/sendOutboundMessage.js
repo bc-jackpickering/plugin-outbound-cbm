@@ -84,7 +84,10 @@ exports.handler = TokenValidator(async function (context, event, callback) {
 
     // Handle existing conversation in progress
     if (existingConversationDetails) {
-      if (!OpenChatFlag && !existingConversationDetails.taskExists) {
+      console.log(existingConversationDetails);
+      console.log(existingConversationDetails.conversation);
+
+      if (!existingConversationDetails.taskExists) {
         // For the scenario where:
         // "We are waiting until the customer replies before creating a task &&
         // there is an existing conversation &&
@@ -100,7 +103,7 @@ exports.handler = TokenValidator(async function (context, event, callback) {
         reusingExistingConversation = true;
       } else {
         // Do not close the current conversation and let the agent know that an active conversation is already open with that customer
-        // await closeCurrentlyActiveConversation(client, existingConversationDetails.conversation.sid);
+        await closeCurrentlyActiveConversation(client, existingConversationDetails.conversation.sid);
 
         return existingOpenConversationResponse(
           callback,
